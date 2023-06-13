@@ -131,7 +131,7 @@ import org.wildfly.security.auth.server.SecurityIdentity;
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  * @author <a href="mailto:ropalka@redhat.com">Richard Opalka</a>
  */
-final class OperationContextImpl extends AbstractOperationContext implements AutoCloseable {
+final class OperationContextImpl extends AbstractOperationContext {
 
     private static final Object NULL = new Object();
 
@@ -172,7 +172,7 @@ final class OperationContextImpl extends AbstractOperationContext implements Aut
 
     private volatile ModelControllerImpl.ManagementModelImpl managementModel;
 
-    private volatile ModelControllerImpl.ManagementModelImpl originalModel;
+    private final ModelControllerImpl.ManagementModelImpl originalModel;
 
     /** Tracks the relationship between domain resources and hosts and server groups */
     private volatile HostServerGroupTracker hostServerGroupTracker;
@@ -247,26 +247,6 @@ final class OperationContextImpl extends AbstractOperationContext implements Aut
         } else {
             this.capabilitiesAlreadyBroken = false;
         }
-    }
-
-    @Override
-    public void close() {
-        this.originalModel = this.managementModel = null;
-        this.lockStep = this.containerMonitorStep = null;
-        this.contextAttachments.close();
-        synchronized (this.realRemovingControllers) {
-            this.realRemovingControllers.clear();
-            this.removalSteps.clear();
-        }
-        this.addedRequirements.clear();
-        this.removedCapabilities.clear();
-        this.affectsModel.clear();
-        this.authorizations.clear();
-        this.serviceTargets.clear();
-        this.serviceRegistries.clear();
-
-        // DON'T close 'attachments' -- that object is owned by ModelControllerImpl
-        super.close();
     }
 
     public InputStream getAttachmentStream(final int index) {
